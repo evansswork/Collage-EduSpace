@@ -1,0 +1,209 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
+@source '../js/**/*.js';
+@source '../../app/Livewire/**/*.php';
+@source '../../app/View/Components/**/*.php';
+
+@theme {
+    --font-sans: 'Inter', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+        'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+[x-cloak] { display: none !important; }
+
+/* Notion-style scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Smooth transitions globally */
+button, a {
+    transition-duration: 150ms;
+}
+
+/* ===== Landing page animations ===== */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-10px); }
+}
+
+.animate-float {
+    animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+    animation: float 4s ease-in-out infinite;
+    animation-delay: 2s;
+}
+
+/* Smooth scroll for anchor links */
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px; /* offset for fixed navbar */
+}
+
+/* ===== Auth page transitions ===== */
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-old(auth-card),
+::view-transition-new(auth-card) {
+    animation-duration: 360ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.auth-page {
+    overflow-x: hidden;
+}
+
+.auth-visual {
+    animation: auth-visual-in 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-brand {
+    animation: auth-soft-drop 520ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+.auth-card-wrap {
+    animation: auth-card-in-right 560ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+.auth-register .auth-card-wrap {
+    animation-name: auth-card-in-left;
+}
+
+.auth-card {
+    view-transition-name: auth-card;
+}
+
+.auth-page.is-leaving .auth-card-wrap {
+    pointer-events: none;
+}
+
+.auth-page.auth-leave-register .auth-card-wrap {
+    animation: auth-card-out-left 210ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.auth-page.auth-leave-login .auth-card-wrap {
+    animation: auth-card-out-right 210ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.auth-page.auth-leave-landing .auth-card-wrap {
+    animation: auth-card-out-down 190ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+.auth-page.is-leaving .auth-visual {
+    animation: auth-visual-out 230ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes auth-card-in-right {
+    from {
+        opacity: 0;
+        transform: translateX(34px) scale(0.985);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes auth-card-in-left {
+    from {
+        opacity: 0;
+        transform: translateX(-34px) scale(0.985);
+        filter: blur(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes auth-card-out-left {
+    to {
+        opacity: 0;
+        transform: translateX(-26px) scale(0.985);
+        filter: blur(6px);
+    }
+}
+
+@keyframes auth-card-out-right {
+    to {
+        opacity: 0;
+        transform: translateX(26px) scale(0.985);
+        filter: blur(6px);
+    }
+}
+
+@keyframes auth-card-out-down {
+    to {
+        opacity: 0;
+        transform: translateY(14px) scale(0.99);
+        filter: blur(5px);
+    }
+}
+
+@keyframes auth-visual-in {
+    from {
+        opacity: 0;
+        transform: scale(1.03);
+        filter: blur(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+}
+
+@keyframes auth-visual-out {
+    to {
+        opacity: 0.72;
+        transform: scale(1.015);
+        filter: blur(5px);
+    }
+}
+
+@keyframes auth-soft-drop {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    ::view-transition-old(auth-card),
+    ::view-transition-new(auth-card),
+    .auth-visual,
+    .auth-brand,
+    .auth-card-wrap,
+    .auth-page.is-leaving .auth-card-wrap,
+    .auth-page.is-leaving .auth-visual {
+        animation: none !important;
+        transition: none !important;
+        filter: none !important;
+        transform: none !important;
+    }
+}
