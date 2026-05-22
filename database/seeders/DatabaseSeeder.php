@@ -205,6 +205,7 @@ class DatabaseSeeder extends Seeder
             ['rpl', 2, 'Requirements', 'Pertemuan 2 - Requirements Engineering.pdf'],
             ['rpl', 3, 'Design', 'Pertemuan 3 - Software Design Patterns.pdf'],
             ['rpl', 4, 'UML',   'Pertemuan 4 - UML Diagram Lengkap.pdf'],
+            ['rpl', 5, 'Demo ZIP', 'Pertemuan 5 - Paket Demo ZIP.zip'],
             ['metnum', 1, 'Pengantar', 'MetNum Bab 1 - Galat & Error.pdf'],
             ['metnum', 2, 'Akar Persamaan', 'MetNum Bab 2 - Bisection Method.pdf'],
             ['metnum', 3, 'Newton Raphson', 'MetNum Bab 3 - Newton-Raphson.pdf'],
@@ -224,7 +225,11 @@ class DatabaseSeeder extends Seeder
                 'title' => $m[3],
                 'file_name' => $m[3],
                 'file_path' => $filePath,
-                'mime_type' => str_ends_with($m[3], '.py') ? 'text/x-python' : 'application/pdf',
+                'mime_type' => match (strtolower(pathinfo($m[3], PATHINFO_EXTENSION))) {
+                    'py' => 'text/x-python',
+                    'zip' => 'application/zip',
+                    default => 'application/pdf',
+                },
                 'file_size' => rand(50000, 5000000),
                 'week' => $m[1],
                 'topic' => $m[2],
@@ -358,6 +363,12 @@ class DatabaseSeeder extends Seeder
 
     private function putDemoMaterialFile(string $path, string $fileName, int $week, string $topic): void
     {
+        if (str_ends_with(strtolower($fileName), '.zip')) {
+            Storage::disk('public')->put($path, $this->demoZip());
+
+            return;
+        }
+
         if (str_ends_with(strtolower($fileName), '.py')) {
             Storage::disk('public')->put($path, <<<PY
 def newton_raphson(f, df, x0, tol=1e-6, max_iter=100):
@@ -378,6 +389,35 @@ PY);
             $path,
             $this->demoPdf($fileName, "Minggu {$week} - {$topic}")
         );
+    }
+
+    private function demoZip(): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'eduspace-demo-zip-');
+        if ($path === false) {
+            throw new \RuntimeException('Gagal membuat file sementara untuk ZIP demo.');
+        }
+
+        $zip = new \ZipArchive();
+        if ($zip->open($path, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            @unlink($path);
+
+            throw new \RuntimeException('Gagal membuat ZIP demo.');
+        }
+
+        $zip->addFromString('README.md', "# Paket Demo RPL\n\nContoh paket ZIP untuk materi minggu 5.\n");
+        $zip->addFromString('src/main.py', "print(\"Halo dari paket demo RPL minggu 5\")\n");
+        $zip->addFromString('docs/catatan.txt', "Catatan demo untuk materi ZIP RPL.\n");
+        $zip->close();
+
+        $contents = file_get_contents($path);
+        @unlink($path);
+
+        if ($contents === false) {
+            throw new \RuntimeException('Gagal membaca ZIP demo.');
+        }
+
+        return $contents;
     }
 
     private function demoPdf(string $title, string $body): string
