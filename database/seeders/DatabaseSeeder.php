@@ -140,6 +140,25 @@ class DatabaseSeeder extends Seeder
             'max_score' => 100,
         ]);
 
+        // Dummy assignment tambahan
+        Assignment::create([
+            'course_id' => $rpl->id,
+            'title' => 'Tugas 1 — Review Sprint EduSpace',
+            'instructions' => "Tuliskan ringkasan singkat progres sprint EduSpace.\n\nWajib menyertakan:\n1. Fitur yang sudah selesai\n2. Kendala yang ditemukan\n3. Rencana perbaikan berikutnya\n\nFormat: PDF, maksimal 5 halaman.",
+            'due_at' => '2026-05-27 23:59:00',
+            'type' => 'individual',
+            'max_score' => 100,
+        ]);
+
+        Assignment::create([
+            'course_id' => $metnum->id,
+            'title' => 'Tes 2 — Latihan Analisis Data',
+            'instructions' => "Buat laporan singkat analisis data sederhana menggunakan spreadsheet atau Python.\n\nWajib menyertakan:\n1. Deskripsi dataset\n2. Ringkasan temuan utama\n3. Grafik pendukung\n\nFormat: PDF, maksimal 5 halaman.",
+            'due_at' => '2026-05-30 23:59:00',
+            'type' => 'individual',
+            'max_score' => 100,
+        ]);
+
         // Upcoming (jauh)
         $tugasBasdat = Assignment::create([
             'course_id' => $basdat->id,
@@ -313,6 +332,48 @@ class DatabaseSeeder extends Seeder
             ForumVote::create(['forum_post_id' => $q2->id, 'user_id' => $voter->id]);
         }
 
+        // Dummy discussion untuk Tugas Besar Kelompok
+        $groupPinned = ForumPost::create([
+            'assignment_id' => $tugasKelompok->id,
+            'user_id' => $clara->id,
+            'body' => "Untuk Tugas Besar, setiap kelompok wajib update progres minimal 2 kali sebelum presentasi.\n\nPastikan repo Git, dokumentasi, dan pembagian kontribusi anggota terlihat jelas.",
+            'is_pinned' => true,
+            'is_lecturer_reply' => true,
+        ]);
+
+        $groupQ1 = ForumPost::create([
+            'assignment_id' => $tugasKelompok->id,
+            'user_id' => $dimas->id,
+            'body' => 'Bu, untuk presentasi apakah demo aplikasinya harus sudah deploy atau boleh jalan lokal?',
+        ]);
+        ForumPost::create([
+            'assignment_id' => $tugasKelompok->id,
+            'user_id' => $clara->id,
+            'parent_id' => $groupQ1->id,
+            'body' => 'Boleh jalan lokal, tapi pastikan alur demo sudah siap dan database contoh tidak kosong.',
+            'is_lecturer_reply' => true,
+        ]);
+
+        $groupQ2 = ForumPost::create([
+            'assignment_id' => $tugasKelompok->id,
+            'user_id' => $raka->id,
+            'body' => 'Kalau anggota mengerjakan bagian berbeda, bukti kontribusinya cukup dari commit history atau perlu dicantumkan di laporan juga?',
+        ]);
+        ForumPost::create([
+            'assignment_id' => $tugasKelompok->id,
+            'user_id' => $clara->id,
+            'parent_id' => $groupQ2->id,
+            'body' => 'Cantumkan ringkas di laporan juga ya. Commit history tetap boleh dilampirkan sebagai bukti pendukung.',
+            'is_lecturer_reply' => true,
+        ]);
+
+        foreach ([$dimas, $raka, $anggotaA, $anggotaB] as $voter) {
+            ForumVote::create(['forum_post_id' => $groupPinned->id, 'user_id' => $voter->id]);
+        }
+        foreach ([$anggotaA, $anggotaB] as $voter) {
+            ForumVote::create(['forum_post_id' => $groupQ1->id, 'user_id' => $voter->id]);
+        }
+
         // ============================
         // NOTIFICATIONS (Smart Notification Hub)
         // ============================
@@ -371,18 +432,18 @@ class DatabaseSeeder extends Seeder
 
         if (str_ends_with(strtolower($fileName), '.py')) {
             Storage::disk('public')->put($path, <<<PY
-def newton_raphson(f, df, x0, tol=1e-6, max_iter=100):
-    x = x0
-    for i in range(max_iter):
-        fx = f(x)
-        if abs(fx) < tol:
-            return x, i
-        x = x - fx / df(x)
-    return None, max_iter
+    def newton_raphson(f, df, x0, tol=1e-6, max_iter=100):
+        x = x0
+        for i in range(max_iter):
+            fx = f(x)
+            if abs(fx) < tol:
+                return x, i
+            x = x - fx / df(x)
+        return None, max_iter
 
-print("Contoh kode materi {$topic}")
-PY);
-            return;
+    print("Contoh kode materi {$topic}")
+    PY);
+                return;
         }
 
         Storage::disk('public')->put(
