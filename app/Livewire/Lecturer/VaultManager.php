@@ -92,7 +92,9 @@ class VaultManager extends Component
             return;
         }
 
-        $this->validate(['uploadedFile' => 'file|max:51200']);
+        $this->validate([
+            'uploadedFile' => 'file|extensions:pdf,doc,docx,ppt,pptx,xlsx,zip,py,java,js,md,txt,json,sql,html,css|max:51200',
+        ]);
 
         $intelligence = app(VaultIntelligenceService::class);
         $analysis = $intelligence->analyzeUpload($this->uploadedFile, $this->courses);

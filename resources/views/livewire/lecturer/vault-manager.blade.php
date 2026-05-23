@@ -27,7 +27,7 @@
     {{-- ========== UPLOAD AREA ========== --}}
     <div class="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-gray-400 transition">
         <input type="file" wire:model="uploadedFile" id="vault-upload"
-               class="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.py,.java,.js,.md,.txt,.json,.sql,.html,.css">
+               class="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.zip,.py,.java,.js,.md,.txt,.json,.sql,.html,.css">
 
         <label for="vault-upload" class="cursor-pointer flex flex-col items-center">
             <div wire:loading.remove wire:target="uploadedFile" class="flex flex-col items-center">

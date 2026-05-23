@@ -179,7 +179,7 @@ class GroupHub extends Component
         if (!$this->completingTaskId) return;
 
         $this->validate([
-            'taskProof' => 'required|file|max:10240', // 10MB
+            'taskProof' => 'required|file|extensions:pdf,doc,docx,ppt,pptx,xlsx,zip,py,java,js,md,txt,json,sql,html,css|max:51200', // 50MB
         ], [
             'taskProof.required' => 'Wajib upload bukti file (screenshot, dokumen, dll) — anti-manipulasi progress.',
         ]);
@@ -223,7 +223,7 @@ class GroupHub extends Component
     public function uploadFile(): void
     {
         $this->validate([
-            'newFile' => 'required|file|max:20480', // 20MB
+            'newFile' => 'required|file|extensions:pdf,doc,docx,ppt,pptx,xlsx,zip,py,java,js,md,txt,json,sql,html,css|max:51200', // 50MB
             'fileNote' => 'nullable|max:200',
         ]);
 

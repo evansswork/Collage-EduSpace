@@ -175,7 +175,7 @@
                     </label>
                     <div class="border-2 border-dashed border-gray-200 rounded-lg p-4 hover:border-gray-400 transition">
                         <input type="file" wire:model="submissionFile" id="file-upload"
-                               class="hidden" accept=".pdf,.doc,.docx,.zip,.py,.java,.txt">
+                               class="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.zip,.py,.java,.txt">
                         <label for="file-upload" class="cursor-pointer flex flex-col items-center text-center">
                             <svg class="w-8 h-8 text-gray-300 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
@@ -187,7 +187,7 @@
                                     Klik untuk pilih file
                                 @endif
                             </p>
-                            <p class="text-xs text-gray-500 mt-0.5">PDF, DOC, ZIP, atau kode (maks 10 MB)</p>
+                            <p class="text-xs text-gray-500 mt-0.5">PDF, DOC, PPT, ZIP, atau kode (maks 50 MB)</p>
                         </label>
                     </div>
                 </div>

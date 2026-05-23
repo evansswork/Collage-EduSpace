@@ -207,7 +207,9 @@ class Dashboard extends Component
             return;
         }
 
-        $this->validate(['materialUpload' => 'file|max:51200']);
+        $this->validate([
+            'materialUpload' => 'file|extensions:pdf,doc,docx,ppt,pptx,xlsx,zip,py,java,js,md,txt,json,sql,html,css|max:51200',
+        ]);
 
         $intelligence = app(VaultIntelligenceService::class);
         $analysis = $intelligence->analyzeUpload($this->materialUpload, collect([$course]));

@@ -53,6 +53,7 @@ class AssignmentDetail extends Component
     {
         $this->validate([
             'submissionContent' => 'required|min:10',
+            'submissionFile' => 'nullable|file|extensions:pdf,doc,docx,ppt,pptx,xlsx,zip,py,java,txt|max:51200',
         ], [
             'submissionContent.required' => 'Tuliskan deskripsi atau catatan submission.',
             'submissionContent.min'      => 'Deskripsi minimal 10 karakter.',

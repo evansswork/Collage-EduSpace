@@ -113,7 +113,7 @@
                            wire:model="materialUpload"
                            id="class-material-upload-{{ $selectedCourseId }}"
                            class="hidden"
-                           accept=".pdf,.doc,.docx,.ppt,.pptx,.zip,.py,.java,.js,.md,.txt,.json,.sql,.html,.css">
+                              accept=".pdf,.doc,.docx,.ppt,.pptx,.xlsx,.zip,.py,.java,.js,.md,.txt,.json,.sql,.html,.css">
 
                     <label for="class-material-upload-{{ $selectedCourseId }}" class="cursor-pointer flex flex-col items-center">
                         <div wire:loading.remove wire:target="materialUpload" class="flex flex-col items-center">
