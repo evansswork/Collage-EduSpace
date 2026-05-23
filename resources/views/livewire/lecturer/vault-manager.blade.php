@@ -52,6 +52,106 @@
         @error('uploadedFile') <p class="text-xs text-red-600 mt-2">{{ $message }}</p> @enderror
     </div>
 
+    @if($pendingAnalysis)
+        <div class="bg-white border border-amber-300 rounded-2xl overflow-hidden">
+            <div class="px-6 py-4 border-b border-amber-200 bg-amber-50">
+                <h3 class="text-sm font-semibold text-amber-900">Konfirmasi Hasil Auto-Vault</h3>
+                <p class="text-xs text-amber-800 mt-0.5">
+                    Sistem mendeteksi file ini untuk
+                    <span class="font-semibold">{{ $pendingAnalysis['course_name'] ?? 'Mata kuliah belum terdeteksi' }}</span>
+                    ·
+                    <span class="font-semibold">{{ !empty($pendingAnalysis['week']) ? 'Minggu ' . $pendingAnalysis['week'] : 'Tanpa minggu' }}</span>
+                    ·
+                    <span class="font-semibold">{{ $pendingAnalysis['topic'] ?: 'Tanpa topik' }}</span>
+                </p>
+            </div>
+
+            <div class="p-5 grid grid-cols-1 md:grid-cols-4 gap-3 text-sm">
+                <div class="md:col-span-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Mata Kuliah</p>
+                    <p class="mt-1 font-medium text-gray-900">{{ $pendingAnalysis['course_name'] ?? 'Belum terdeteksi' }}</p>
+                </div>
+                <div class="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Minggu</p>
+                    <p class="mt-1 font-medium text-gray-900">{{ !empty($pendingAnalysis['week']) ? 'Minggu ' . $pendingAnalysis['week'] : 'Tanpa minggu' }}</p>
+                </div>
+                <div class="rounded-lg bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Topik</p>
+                    <p class="mt-1 font-medium text-gray-900 truncate">{{ $pendingAnalysis['topic'] ?: 'Tanpa topik' }}</p>
+                </div>
+                <div class="md:col-span-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Confidence</p>
+                    <p class="mt-1 font-medium text-gray-900">{{ $pendingAnalysis['confidence'] ?? 0 }}%</p>
+                </div>
+                <div class="md:col-span-2 rounded-lg bg-gray-50 border border-gray-200 p-3">
+                    <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Sumber Deteksi</p>
+                    <p class="mt-1 font-medium text-gray-900">{{ $pendingAnalysis['source'] ?? 'AI' }}</p>
+                </div>
+            </div>
+
+            @if($showManualOverride)
+                <div class="px-5 pb-5">
+                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-4">
+                        <h4 class="text-sm font-semibold text-gray-900">Edit Manual</h4>
+
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1.5">Mata Kuliah</label>
+                            <select wire:model="manualCourseId"
+                                    class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition">
+                                <option value="">Pilih mata kuliah</option>
+                                @foreach($this->courses as $course)
+                                    <option value="{{ $course->id }}">{{ $course->code }} · {{ $course->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('manualCourseId') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Minggu</label>
+                                <input type="number" wire:model="manualWeek" min="1" max="30" placeholder="Contoh: 5"
+                                       class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition">
+                                @error('manualWeek') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1.5">Topik</label>
+                                <input type="text" wire:model="manualTopic" placeholder="Contoh: API Authentication"
+                                       class="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/10 focus:border-gray-900 transition">
+                                @error('manualTopic') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap justify-end gap-2">
+                            <button type="button" wire:click="cancelManualEdit"
+                                    class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-100 transition">
+                                Kembali
+                            </button>
+                            <button type="button" wire:click="saveManualOverride"
+                                    class="px-3 py-1.5 bg-gray-900 text-white rounded-md text-xs font-medium hover:bg-gray-800 transition">
+                                Simpan Manual
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @else
+                <div class="px-5 pb-5 flex flex-wrap justify-end gap-2">
+                    <button type="button" wire:click="cancelPendingAnalysis"
+                            class="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-100 transition">
+                        Batal
+                    </button>
+                    <button type="button" wire:click="editManual"
+                            class="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md text-xs font-medium hover:bg-gray-200 transition">
+                        Edit Manual
+                    </button>
+                    <button type="button" wire:click="confirmAndSave"
+                            class="px-3 py-1.5 bg-gray-900 text-white rounded-md text-xs font-medium hover:bg-gray-800 transition">
+                        Konfirmasi & Simpan
+                    </button>
+                </div>
+            @endif
+        </div>
+    @endif
+
     @if($lastAnalysis)
         <div class="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">

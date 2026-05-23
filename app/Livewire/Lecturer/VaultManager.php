@@ -21,6 +21,12 @@ class VaultManager extends Component
     public $uploadedFile;
     public ?array $lastAnalysis = null;
     public ?int $previewFileId = null;
+    public ?array $pendingAnalysis = null;
+    public bool $showManualOverride = false;
+
+    public ?int $manualCourseId = null;
+    public ?int $manualWeek = null;
+    public string $manualTopic = '';
 
     #[Computed]
     public function courses()
@@ -91,13 +97,96 @@ class VaultManager extends Component
         $intelligence = app(VaultIntelligenceService::class);
         $analysis = $intelligence->analyzeUpload($this->uploadedFile, $this->courses);
 
-        if (!$analysis['course_id']) {
-            $this->reset('uploadedFile');
-            $this->dispatch('toast', message: 'Kategori belum bisa ditentukan');
+        // Jangan simpan langsung: tampilkan dulu untuk konfirmasi dosen.
+        $this->pendingAnalysis = $analysis;
+        $this->showManualOverride = false;
+        $this->manualCourseId = $analysis['course_id'] ?? null;
+        $this->manualWeek = $analysis['week'] ?? null;
+        $this->manualTopic = (string) ($analysis['topic'] ?? '');
+
+        $this->dispatch('toast', message: 'Cek hasil deteksi AI dulu sebelum disimpan');
+    }
+
+    public function confirmAndSave(): void
+    {
+        if (!$this->pendingAnalysis || !$this->uploadedFile) {
+            return;
+        }
+
+        $intelligence = app(VaultIntelligenceService::class);
+        $analysis = $this->pendingAnalysis;
+
+        if (empty($analysis['course_id'])) {
+            $this->showManualOverride = true;
+            $this->dispatch('toast', message: 'Mata kuliah belum terdeteksi. Silakan Edit Manual.');
             return;
         }
 
         $this->saveAnalyzedFile($analysis, $intelligence);
+    }
+
+    public function editManual(): void
+    {
+        if (!$this->pendingAnalysis) {
+            return;
+        }
+
+        $this->showManualOverride = true;
+    }
+
+    public function cancelManualEdit(): void
+    {
+        if (!$this->pendingAnalysis) {
+            $this->showManualOverride = false;
+            return;
+        }
+
+        $this->showManualOverride = false;
+        $this->manualCourseId = $this->pendingAnalysis['course_id'] ?? null;
+        $this->manualWeek = $this->pendingAnalysis['week'] ?? null;
+        $this->manualTopic = (string) ($this->pendingAnalysis['topic'] ?? '');
+    }
+
+    public function saveManualOverride(): void
+    {
+        if (!$this->pendingAnalysis || !$this->uploadedFile) {
+            return;
+        }
+
+        $this->validate([
+            'manualCourseId' => 'required|integer',
+            'manualWeek' => 'nullable|integer|min:1|max:30',
+            'manualTopic' => 'nullable|string|max:120',
+        ], [
+            'manualCourseId.required' => 'Mata kuliah wajib dipilih.',
+            'manualWeek.min' => 'Minggu minimal 1.',
+            'manualWeek.max' => 'Minggu maksimal 30.',
+            'manualTopic.max' => 'Topik maksimal 120 karakter.',
+        ]);
+
+        $course = Course::where('lecturer_id', auth()->id())->find($this->manualCourseId);
+        if (!$course) {
+            $this->addError('manualCourseId', 'Mata kuliah tidak valid untuk akun ini.');
+            return;
+        }
+
+        $analysis = array_merge($this->pendingAnalysis, [
+            'course_id' => $course->id,
+            'course_name' => $course->name,
+            'course_code' => $course->code,
+            'course_color' => $course->color,
+            'week' => $this->manualWeek,
+            'topic' => trim($this->manualTopic) !== '' ? trim($this->manualTopic) : null,
+            'source' => 'manual-override',
+            'confidence' => 100,
+        ]);
+
+        $this->saveAnalyzedFile($analysis, app(VaultIntelligenceService::class));
+    }
+
+    public function cancelPendingAnalysis(): void
+    {
+        $this->reset('uploadedFile', 'pendingAnalysis', 'showManualOverride', 'manualCourseId', 'manualWeek', 'manualTopic');
     }
 
     protected function saveAnalyzedFile(array $analysis, VaultIntelligenceService $intelligence): void
@@ -113,6 +202,7 @@ class VaultManager extends Component
         $directory = $intelligence->storageDirectory($course, $analysis['week'], $analysis['topic']);
         $storedName = $intelligence->safeStoredFileName($this->uploadedFile->getClientOriginalName());
         $path = $this->uploadedFile->storeAs($directory, $storedName, 'public');
+        $isManualOverride = ($analysis['source'] ?? null) === 'manual-override';
 
         VaultFile::create([
             'course_id' => $course->id,
@@ -124,15 +214,26 @@ class VaultManager extends Component
             'file_size' => $this->uploadedFile->getSize(),
             'week' => $analysis['week'],
             'topic' => $analysis['topic'],
-            'ai_categorized' => true,
+            'ai_categorized' => !$isManualOverride,
         ]);
 
         $this->lastAnalysis = array_merge($analysis, [
+            'course_id' => $course->id,
+            'course_name' => $course->name,
+            'course_code' => $course->code,
+            'course_color' => $course->color,
             'stored_path' => $path,
             'folder' => $directory,
         ]);
 
-        $this->reset('uploadedFile');
+        $this->reset(
+            'uploadedFile',
+            'pendingAnalysis',
+            'showManualOverride',
+            'manualCourseId',
+            'manualWeek',
+            'manualTopic'
+        );
         unset($this->recentFiles, $this->vaultStats);
 
         $this->dispatch(
