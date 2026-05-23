@@ -21,7 +21,7 @@
         @if($this->currentSubmission)
             <div class="flex items-center gap-2">
                 <button wire:click="goPrev"
-                        @disabled(!$this->position['prevId'])
+                        @disabled(!$this->prevSubmissionId)
                         class="w-9 h-9 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
@@ -29,11 +29,11 @@
                 </button>
 
                 <span class="text-xs text-gray-500 px-2 min-w-[60px] text-center">
-                    {{ $this->position['current'] }} / {{ $this->position['total'] }}
+                    {{ $this->currentIndex }} / {{ $this->queueTotal }}
                 </span>
 
                 <button wire:click="goNext"
-                        @disabled(!$this->position['nextId'])
+                        @disabled(!$this->nextSubmissionId)
                         class="w-9 h-9 flex items-center justify-center rounded-md border border-gray-200 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
@@ -347,7 +347,7 @@
 
                     {{-- SUBMIT --}}
                     <div class="pt-2 flex items-center justify-end gap-2">
-                        @if($this->position['nextId'])
+                        @if($nextSubmissionId)
                             <button type="submit"
                                     class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-sm font-medium transition inline-flex items-center gap-2">
                                 <span wire:loading.remove wire:target="saveAndNext">Simpan & Lanjut</span>

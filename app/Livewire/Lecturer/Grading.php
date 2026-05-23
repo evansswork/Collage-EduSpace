@@ -18,6 +18,10 @@ class Grading extends Component
 {
     public Assignment $assignment;
     public ?int $currentSubmissionId = null;
+    public int $currentIndex = 0;
+    public int $queueTotal = 0;
+    public ?int $prevSubmissionId = null;
+    public ?int $nextSubmissionId = null;
 
     // Grading form
     public ?int $scoreInput = null;
@@ -85,19 +89,21 @@ class Grading extends Component
         );
     }
 
-    #[Computed]
-    public function position(): array
+    protected function syncNavigationState(): void
     {
-        $queue = $this->queue;
-        $currentIdx = $queue->search(fn($s) => $s->id === $this->currentSubmissionId);
-        return [
-            'current' => $currentIdx !== false ? $currentIdx + 1 : 0,
-            'total'   => $queue->count(),
-            'prevId'  => $currentIdx > 0 ? $queue[$currentIdx - 1]->id : null,
-            'nextId'  => $currentIdx !== false && $currentIdx < $queue->count() - 1
-                            ? $queue[$currentIdx + 1]->id
-                            : null,
-        ];
+        $queue = $this->assignment->submissions()
+            ->orderByRaw("CASE WHEN score IS NULL THEN 0 ELSE 1 END")
+            ->orderBy('submitted_at')
+            ->get(['id']);
+
+        $currentIdx = $queue->search(fn($submission) => $submission->id === $this->currentSubmissionId);
+
+        $this->queueTotal = $queue->count();
+        $this->currentIndex = $currentIdx !== false ? $currentIdx + 1 : 0;
+        $this->prevSubmissionId = $currentIdx > 0 ? $queue[$currentIdx - 1]->id : null;
+        $this->nextSubmissionId = $currentIdx !== false && $currentIdx < $queue->count() - 1
+            ? $queue[$currentIdx + 1]->id
+            : null;
     }
 
     public function loadSubmission(int $id): void
@@ -110,6 +116,7 @@ class Grading extends Component
         $this->feedbackInput = $sub->feedback ?? '';
         $this->aiDismissed = false;
         $this->aiResult = null;
+        $this->syncNavigationState();
 
         // Run AI similarity check (Non-Blocking — cuma saran)
         if ($sub->content) {
@@ -159,27 +166,28 @@ class Grading extends Component
         $this->dispatch('toast', message: " Tersimpan: {$this->scoreInput}/{$this->assignment->max_score}");
 
         // Auto-lanjut ke berikutnya
-        $next = $this->position['nextId'];
-        if ($next) {
-            $this->loadSubmission($next);
+        if ($this->nextSubmissionId) {
+            $this->loadSubmission($this->nextSubmissionId);
         } else {
-            unset($this->queue, $this->currentSubmission, $this->position);
+            $this->currentSubmissionId = null;
+            $this->currentIndex = 0;
+            $this->queueTotal = 0;
+            $this->prevSubmissionId = null;
+            $this->nextSubmissionId = null;
         }
-
-        unset($this->queue);
     }
 
     public function goPrev(): void
     {
-        if ($this->position['prevId']) {
-            $this->loadSubmission($this->position['prevId']);
+        if ($this->prevSubmissionId) {
+            $this->loadSubmission($this->prevSubmissionId);
         }
     }
 
     public function goNext(): void
     {
-        if ($this->position['nextId']) {
-            $this->loadSubmission($this->position['nextId']);
+        if ($this->nextSubmissionId) {
+            $this->loadSubmission($this->nextSubmissionId);
         }
     }
 
